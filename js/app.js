@@ -101,7 +101,7 @@
 		'Mr Trump', 'Mr Donald Trump'
 	];
 	var economyWords = [
-		'econ', 'economy', 'GDP', 'stock market', 'dow jones', 's & p', 'NYSE', "new york stock exchange"
+		'football'
 	]
 	
 
