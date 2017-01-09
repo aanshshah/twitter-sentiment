@@ -276,7 +276,7 @@
 			displayData(data, sick);
 			console.log("SICK");
 		}else{
-			displayData(data, sad);
+			displayData(data, happy);
 			console.log("ALT")
 		}
 	}
