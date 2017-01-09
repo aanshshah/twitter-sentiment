@@ -254,25 +254,25 @@
 			return data.text.toLowerCase().indexOf(v) !== -1;
 		})){
 			console.log("TRUMP TWEET");
-		 if (positiveWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
+		 if (positiveWords.some(function(v) {  })) {
 			displayData(data, positive);
 			console.log("POSITIVE");
-		} else if (happyWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
+		} else if (happyWords.some(function(v) { })) {
 			displayData(data, happy);
 			console.log("HAPPY");
-		} else if (lovelyWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
+		} else if (lovelyWords.some(function(v) {  })) {
 			displayData(data, lovely);
 			console.log("LOVELY");
-		} else if (negativeWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
+		} else if (negativeWords.some(function(v) { })) {
 			displayData(data, negative);
 			console.log("NEGATIVE");
-		} else if (sadWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
+		} else if (sadWords.some(function(v) { })) {
 			displayData(data, sad);
 			console.log("SAD");
-		} else if (angryWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
+		} else if (angryWords.some(function(v) {  })) {
 			displayData(data, angry);
 			console.log("ANGRY");
-		} else if (sickWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
+		} else if (sickWords.some(function(v) {  })) {
 			displayData(data, sick);
 			console.log("SICK");
 		}else{
