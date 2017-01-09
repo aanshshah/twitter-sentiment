@@ -101,7 +101,7 @@
 		'Mr Trump', 'Mr Donald Trump'
 	];
 	var economyWords = [
-		'politics'
+		'politics', 'trump'
 	]
 	
 
