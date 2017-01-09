@@ -236,8 +236,11 @@
 			// Place emotion icons
 
 			var position = projection([user.lon, user.lat]);
-			console.log(position);
-			if(position === null) return;
+			
+			if(position === null){
+				console.log("pOSITION IS NULL");
+				return;
+			} 
 
 			faceIcon.enter()
 				.append('svg:image')
