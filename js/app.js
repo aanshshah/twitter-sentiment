@@ -101,7 +101,7 @@
 		'Mr Trump', 'Mr Donald Trump'
 	];
 	var economyWords = [
-		'apple', 'iphone', 'ipad', 'macbook', 'macbook pro'
+		'politics'
 	]
 	
 
