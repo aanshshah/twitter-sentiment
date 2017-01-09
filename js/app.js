@@ -174,13 +174,16 @@
 	}
 
 	function getUserInfo(data, callback) {
-		if(!data.geo) return;
+		if(!data.geo){
+			console.log("ERROR 3");
+			return;
+		} 
 
 		var userInfo = {};
 
 		userInfo.lat = data.geo.coordinates[0];
 		userInfo.lon = data.geo.coordinates[1];
-
+		console.log('latitutde: ' + userInfo.lat + ' longitude: ' + userInfo.lon);
 		if(userInfo.lat === 0 && userInfo.lon === 0){
 			console.log("ERROR");
 			return;
