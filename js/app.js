@@ -181,7 +181,10 @@
 		userInfo.lat = data.geo.coordinates[0];
 		userInfo.lon = data.geo.coordinates[1];
 
-		if(userInfo.lat === 0 && userInfo.lon === 0) return;
+		if(userInfo.lat === 0 && userInfo.lon === 0){
+			console.log("ERROR");
+			return;
+		} 
 
 		var city = data.place.full_name;
 		userInfo.city = city;
@@ -240,7 +243,10 @@
 
 			var position = projection([user.lon, user.lat]);
 			
-			if(position === null) return;
+			if(position === null){
+				console.log("ERROR 2");
+				return;
+			} 
 
 			faceIcon.enter()
 				.append('svg:image')
