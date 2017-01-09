@@ -267,7 +267,7 @@
 			} else if (sickWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
 				displayData(data, sick);
 			}else{
-				sickWordssome(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; });{
+				sickWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; });{
 					displayData(data, sick);
 				}
 				
