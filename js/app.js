@@ -275,6 +275,9 @@
 		} else if (sickWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
 			displayData(data, sick);
 			console.log("SICK");
+		}else{
+			displayData(data, sad);
+			console.log("ALT")
 		}
 	}
 	}
