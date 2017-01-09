@@ -97,9 +97,12 @@
 	];
 
 	var trumpWords = [
-		'trump', 'mr. trump', 'mr. donald trump', 'Mr. Donald Trump', 'Donald Trump', "Trump", "mr. Trump", "TRUMP", "Mr. Trump", "mr trump",
-		"Mr Trump", "Mr Donald Trump"
+		'trump', 'mr. trump', 'mr. donald trump', 'Mr. Donald Trump', 'Donald Trump', "Trump", "mr. Trump", "TRUMP", 'Mr. Trump', 'mr trump',
+		'Mr Trump', 'Mr Donald Trump'
 	];
+	var economyWords = [
+		'economy'
+	]
 	
 
 	/* D3  */
@@ -237,10 +240,7 @@
 
 			var position = projection([user.lon, user.lat]);
 			
-			if(position === null){
-				console.log("pOSITION IS NULL");
-				return;
-			} 
+			if(position === null) return;
 
 			faceIcon.enter()
 				.append('svg:image')
@@ -254,7 +254,7 @@
 		if(!data || !data.place || !data.lang) return; 
 		if(data.place.country_code !== 'US') return;
 		//if(data.lang !== 'en') return;
-		if(trumpWords.some(function(v){return data.text.toLowerCase().indexOf(v) !== -1;})){
+		if(economyWords.some(function(v){return data.text.toLowerCase().indexOf(v) !== -1;})){
 			console.log(data.text.toLowerCase());
 			if (positiveWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
 				displayData(data, positive);
@@ -271,7 +271,7 @@
 			} else if (sickWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
 				displayData(data, sick);
 			} else{
-				displayData(data, happy);
+				// displayData(data, happy);
 			}		
 			}
 	}
