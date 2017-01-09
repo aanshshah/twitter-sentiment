@@ -236,6 +236,7 @@
 			// Place emotion icons
 
 			var position = projection([user.lon, user.lat]);
+			console.log(position);
 			if(position === null) return;
 
 			faceIcon.enter()
@@ -244,7 +245,6 @@
 				.attr('width', '26').attr('height', '26')
            		.attr('transform', function(d) {return 'translate(' + position + ')';});
 		});
-		console.log("done");
 	}
 
 	function processData(data) {
