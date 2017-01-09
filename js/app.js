@@ -250,9 +250,9 @@
 		if(!data || !data.place || !data.lang) return; 
 		if(data.place.country_code !== 'US') return;
 		//if(data.lang !== 'en') return;
-		if(trumpWords.some(function(v){
-			return data.text.toLowerCase().indexOf(v) !== -1;
-		})){
+		// if(trumpWords.some(function(v){
+		// 	return data.text.toLowerCase().indexOf(v) !== -1;
+		// })){
 		if (positiveWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
 			displayData(data, positive);
 		} else if (happyWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
@@ -269,7 +269,7 @@
 			displayData(data, sick);
 		}
 	}
-	}
+	// }
 
 	getData();
 	
