@@ -28,6 +28,7 @@
 	var positiveColor = '#FF8586';
 	var negativeColor = '#63A69F';
 	var neutralColor = '#DECEB3';
+	var redColor = '#FF0000'
 
 	var positive = {
 		type: 'positive',
@@ -56,6 +57,11 @@
 	var sick = {
 		type: 'negative',
 		icon: 'sick-face.png'
+	};
+
+	var trump = {
+		type: 'trump',
+		icon: 'trump-face.png'
 	};
 
 	var positiveWords = [
@@ -90,6 +96,11 @@
 		'sick', ' ill ', 'under weather', 'throw up', 'threw up', 'throwing up', 'puke', 'puking', 'pain', 'hangover', 'intoxicated'
 	];
 
+	var trumpWords = [
+		'trump', 'mr. trump', 'mr. donald trump', 'Mr. Donald Trump', 'Donald Trump', "Trump", "mr. Trump", "TRUMP", "Mr. Trump", "mr trump",
+		"Mr Trump", "Mr Donald Trump"
+	];
+	
 
 	/* D3  */
 
@@ -138,7 +149,7 @@
 	function getData() {
 		pubnub.history({
 	    	channel: channel,
-	    	count: 100,
+	    	count: 200,
 	    	callback: function(messages) {
 	    		pubnub.each( messages[0], processData );
 	    		getStreamData();
@@ -239,7 +250,9 @@
 		if(!data || !data.place || !data.lang) return; 
 		if(data.place.country_code !== 'US') return;
 		//if(data.lang !== 'en') return;
-
+		if(trumpWords.some(function(v){
+			return data.text.toLowerCase().indexOf(v) !== -1;
+		})){
 		if (positiveWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
 			displayData(data, positive);
 		} else if (happyWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
@@ -255,6 +268,7 @@
 		} else if (sickWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
 			displayData(data, sick);
 		}
+	}
 	}
 
 	getData();
