@@ -252,6 +252,7 @@
 		if(data.place.country_code !== 'US') return;
 		//if(data.lang !== 'en') return;
 		// if(trumpWords.some(function(v){return data.text.toLowerCase().indexOf(v) !== -1;})){
+			console.log(data.text.toLowerCase());
 			if (positiveWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
 				displayData(data, positive);
 			} else if (happyWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
