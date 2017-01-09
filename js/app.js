@@ -254,21 +254,29 @@
 			return data.text.toLowerCase().indexOf(v) !== -1;
 		})){
 			console.log("TRUMP TWEET");
-		}else if (positiveWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
+		 if (positiveWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
 			displayData(data, positive);
+			console.log("POSITIVE");
 		} else if (happyWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
 			displayData(data, happy);
+			console.log("HAPPY");
 		} else if (lovelyWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
 			displayData(data, lovely);
+			console.log("LOVELY");
 		} else if (negativeWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
 			displayData(data, negative);
+			console.log("NEGATIVE");
 		} else if (sadWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
 			displayData(data, sad);
+			console.log("SAD");
 		} else if (angryWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
 			displayData(data, angry);
+			console.log("ANGRY");
 		} else if (sickWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
 			displayData(data, sick);
+			console.log("SICK");
 		}
+	}
 	}
 
 	getData();
