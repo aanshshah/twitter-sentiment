@@ -149,7 +149,7 @@
 	function getData() {
 		pubnub.history({
 	    	channel: channel,
-	    	count: 200,
+	    	count: 100,
 	    	callback: function(messages) {
 	    		pubnub.each( messages[0], processData );
 	    		getStreamData();
@@ -250,35 +250,24 @@
 		if(!data || !data.place || !data.lang) return; 
 		if(data.place.country_code !== 'US') return;
 		//if(data.lang !== 'en') return;
-		if(trumpWords.some(function(v){
-			return data.text.toLowerCase().indexOf(v) !== -1;
-		})){
-			console.log("TRUMP TWEET");
-		 if (positiveWords.some(function(v) {  })) {
-			displayData(data, positive);
-			console.log("POSITIVE");
-		} else if (happyWords.some(function(v) { })) {
-			displayData(data, happy);
-			console.log("HAPPY");
-		} else if (lovelyWords.some(function(v) {  })) {
-			displayData(data, lovely);
-			console.log("LOVELY");
-		} else if (negativeWords.some(function(v) { })) {
-			displayData(data, negative);
-			console.log("NEGATIVE");
-		} else if (sadWords.some(function(v) { })) {
-			displayData(data, sad);
-			console.log("SAD");
-		} else if (angryWords.some(function(v) {  })) {
-			displayData(data, angry);
-			console.log("ANGRY");
-		} else if (sickWords.some(function(v) {  })) {
-			displayData(data, sick);
-			console.log("SICK");
-		}else{
-			displayData(data, happy);
-			console.log(data);
-		}
+		if(trumpWords.some(function(v){return data.text.toLowerCase().indexOf(v) !== -1;})){
+			if (positiveWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
+				displayData(data, positive);
+			} else if (happyWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
+				displayData(data, happy);
+			} else if (lovelyWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
+				displayData(data, lovely);
+			} else if (negativeWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
+				displayData(data, negative);
+			} else if (sadWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
+				displayData(data, sad);
+			} else if (angryWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
+				displayData(data, angry);
+			} else if (sickWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
+				displayData(data, sick);
+			}else{
+				displayData(data, happy);
+			}
 	}
 	}
 
