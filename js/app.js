@@ -60,8 +60,8 @@
 	};
 
 	var trump = {
-		type: 'trump',
-		icon: 'trump-face.png'
+		type: 'positive',
+		icon: 'neutral-image.png'
 	};
 
 	var positiveWords = [
@@ -267,7 +267,7 @@
 			} else if (sickWords.some(function(v) { return data.text.toLowerCase().indexOf(v) !== -1; })) {
 				displayData(data, sick);
 			}else{
-					displayData(data, sick);
+					displayData(data, trump);
 				}
 				
 			}
