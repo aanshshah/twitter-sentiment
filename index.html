@@ -1,63 +1,716 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="utf-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-
-	<title>PubNub x Twitter</title>
-	<meta name="description" content="Twitter Visualizations using PubNub data and D3.js">
-	<meta name="author" content="Aansh Shah">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel="stylesheet" href="css/style.css">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Twitter Sentiment Stream - Live Demo</title>
+    <meta name="description" content="Real-time Twitter Sentiment Visualization with Live Stream Simulation">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        header {
+            background: rgba(29, 161, 242, 0.95);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+        
+        header h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 300;
+        }
+        
+        .subtitle {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        
+        #main {
+            display: flex;
+            max-width: 1400px;
+            margin: 20px auto;
+            gap: 20px;
+            padding: 0 20px;
+        }
+        
+        #map {
+            flex: 2;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            min-height: 500px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .sidebar {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .tweet {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+            border-left: 4px solid #1da1f2;
+        }
+        
+        .tweet.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .tweet.positive {
+            border-left-color: #FF8586;
+        }
+        
+        .tweet.negative {
+            border-left-color: #63A69F;
+        }
+        
+        .tweet.neutral {
+            border-left-color: #DECEB3;
+        }
+        
+        .tweet-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #1da1f2, #0d95e8);
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 4px 12px rgba(29, 161, 242, 0.3);
+        }
+        
+        .user-info {
+            flex: 1;
+        }
+        
+        .name {
+            font-weight: 600;
+            margin: 0;
+            font-size: 16px;
+            color: #14171a;
+        }
+        
+        .screenname {
+            color: #657786;
+            margin: 2px 0 0 0;
+            font-size: 14px;
+        }
+        
+        .location {
+            color: #657786;
+            font-size: 12px;
+            margin: 2px 0 0 0;
+        }
+        
+        .text {
+            margin: 12px 0;
+            line-height: 1.5;
+            font-size: 15px;
+            color: #14171a;
+        }
+        
+        .timestamp {
+            color: #657786;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .emotion {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            margin-left: 12px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stats-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .stats-panel h3 {
+            margin: 0 0 15px 0;
+            color: #14171a;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #f7f9fa;
+        }
+        
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            font-weight: 500;
+            color: #14171a;
+        }
+        
+        .stat-value {
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 14px;
+        }
+        
+        .stat-value.positive {
+            background: #FF8586;
+            color: white;
+        }
+        
+        .stat-value.negative {
+            background: #63A69F;
+            color: white;
+        }
+        
+        .stat-value.neutral {
+            background: #DECEB3;
+            color: #14171a;
+        }
+        
+        .stat-value.total {
+            background: #1da1f2;
+            color: white;
+        }
+        
+        .legendbox {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .legendbox h3 {
+            margin: 0 0 15px 0;
+            color: #14171a;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .legendbox ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .legendbox li {
+            display: flex;
+            align-items: center;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+        
+        .legend-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            margin-right: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .legend-color.happy {
+            background: #FF8586;
+        }
+        
+        .legend-color.neutral {
+            background: #DECEB3;
+        }
+        
+        .legend-color.sad {
+            background: #63A69F;
+        }
+        
+        .controls {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .toggle-btn {
+            background: linear-gradient(45deg, #1da1f2, #0d95e8);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(29, 161, 242, 0.3);
+        }
+        
+        .toggle-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(29, 161, 242, 0.4);
+        }
+        
+        .toggle-btn.stopped {
+            background: linear-gradient(45deg, #17bf63, #0fa855);
+            box-shadow: 0 4px 15px rgba(23, 191, 99, 0.3);
+        }
+        
+        .stream-status {
+            margin: 10px 0;
+            font-size: 14px;
+            color: #657786;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #17bf63;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-indicator.stopped {
+            background: #f45d22;
+            animation: none;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .states {
+            fill: #e1e8ed;
+            stroke: #fff;
+            stroke-width: 1;
+            transition: fill 0.5s ease;
+            cursor: pointer;
+        }
+        
+        .states:hover {
+            stroke-width: 2;
+            stroke: #1da1f2;
+        }
+        
+        .tweet-indicator {
+            fill: rgba(29, 161, 242, 0.8);
+            stroke: #fff;
+            stroke-width: 2;
+        }
+        
+        .map-title {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #14171a;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        @media (max-width: 1024px) {
+            #main {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                order: -1;
+            }
+        }
+    </style>
 </head>
-
 <body>
-	<header>
-		<h1><i class="fa fa-twitter"></i> How is America feeling?</h1>
-	</header>
+    <header>
+        <h1>🐦 Real-Time Twitter Sentiment Stream</h1>
+        <p class="subtitle">Live sentiment analysis across the United States</p>
+    </header>
 
-	<section id="main">
+    <div id="main">
+        <div id="map">
+            <div class="map-title">United States Sentiment Map</div>
+        </div>
+        
+        <div class="sidebar">
+            <div class="tweet" id="current-tweet">
+                <div class="tweet-header">
+                    <div class="avatar" id="avatar">🐦</div>
+                    <div class="user-info">
+                        <div class="name" id="name">Twitter Stream</div>
+                        <div class="screenname" id="screenname">@twitter_stream</div>
+                        <div class="location" id="location">Connecting...</div>
+                    </div>
+                    <div class="emotion" id="emotion">⏳</div>
+                </div>
+                <div class="text" id="text">Initializing real-time Twitter sentiment stream...</div>
+                <div class="timestamp">
+                    <span id="timestamp">Just now</span>
+                    <span id="tweet-count">Tweet #0</span>
+                </div>
+            </div>
+            
+            <div class="stats-panel">
+                <h3>📊 Live Statistics</h3>
+                <div class="stat-item">
+                    <span class="stat-label">Total Tweets</span>
+                    <span class="stat-value total" id="total-count">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Positive</span>
+                    <span class="stat-value positive" id="positive-count">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Negative</span>
+                    <span class="stat-value negative" id="negative-count">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Neutral</span>
+                    <span class="stat-value neutral" id="neutral-count">0</span>
+                </div>
+            </div>
+            
+            <div class="legendbox">
+                <h3>🗺️ State Colors</h3>
+                <ul>
+                    <li><div class="legend-color happy"></div>More positive sentiment</li>
+                    <li><div class="legend-color neutral"></div>Balanced sentiment</li>
+                    <li><div class="legend-color sad"></div>More negative sentiment</li>
+                </ul>
+            </div>
+            
+            <div class="controls">
+                <button class="toggle-btn" id="toggle">⏸️ Pause Stream</button>
+                <div class="stream-status">
+                    <div class="status-indicator" id="status-indicator"></div>
+                    <span id="status-text">Live streaming</span>
+                </div>
+                <p style="margin-top: 15px; font-size: 12px; color: #657786;">
+                    Demo with simulated real-time data
+                </p>
+            </div>
+        </div>
+    </div>
 
-		<section id="map" class="map"></section>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/1.1.0/topojson.min.js"></script>
+    <script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js"></script>
+    
+    <script>
+        // Expanded mock tweets database for realistic streaming
+        const mockTweetsDatabase = [
+            // Positive tweets
+            { text: "Having the most amazing day! The weather is absolutely perfect and I'm feeling on top of the world! 🌞✨", user: { name: "Sarah Johnson", screen_name: "sarahsunshine" }, emotion: "positive", emoji: "😊", state: "CA", city: "Los Angeles" },
+            { text: "Just got the promotion I've been working towards for months! Dreams do come true! 🎉🎊", user: { name: "Michael Chen", screen_name: "mikec_dev" }, emotion: "positive", emoji: "🎉", state: "NY", city: "New York" },
+            { text: "This coffee shop has the BEST latte art I've ever seen! Totally made my morning ☕💕", user: { name: "Emma Rodriguez", screen_name: "emma_coffee" }, emotion: "positive", emoji: "☕", state: "WA", city: "Seattle" },
+            { text: "Family dinner was incredible tonight. So grateful for these moments together ❤️🍽️", user: { name: "David Williams", screen_name: "dad_dave" }, emotion: "positive", emoji: "❤️", state: "TX", city: "Houston" },
+            { text: "Finished my first marathon today! 26.2 miles and feeling absolutely incredible! 🏃‍♀️🏅", user: { name: "Jessica Park", screen_name: "runningjess" }, emotion: "positive", emoji: "🏃‍♀️", state: "CO", city: "Denver" },
+            { text: "This sunset view from my balcony is absolutely breathtaking! Nature is amazing 🌅", user: { name: "Alex Thompson", screen_name: "alexphoto" }, emotion: "positive", emoji: "🌅", state: "FL", city: "Miami" },
+            { text: "Just helped an elderly neighbor with groceries. Small acts of kindness make the world better! 😊🤝", user: { name: "Maya Patel", screen_name: "kindness_maya" }, emotion: "positive", emoji: "😊", state: "IL", city: "Chicago" },
+            { text: "Got tickets to see my favorite band live! This is going to be EPIC! 🎵🎸", user: { name: "Ryan Murphy", screen_name: "ryan_music" }, emotion: "positive", emoji: "🎵", state: "OR", city: "Portland" },
+            
+            // Negative tweets  
+            { text: "This traffic jam has been going on for 2 hours. I'm going to be so late for my interview 😤🚗", user: { name: "Jennifer Lee", screen_name: "jenny_commute" }, emotion: "negative", emoji: "😤", state: "CA", city: "San Francisco" },
+            { text: "Really disappointed with the customer service at this restaurant. Waited an hour just to be ignored 😞", user: { name: "Robert Garcia", screen_name: "foodie_rob" }, emotion: "negative", emoji: "😞", state: "NY", city: "Brooklyn" },
+            { text: "My flight got cancelled AGAIN. This airline is the worst. Stuck at the airport all day 🛫😡", user: { name: "Amanda Foster", screen_name: "travel_amanda" }, emotion: "negative", emoji: "😡", state: "FL", city: "Orlando" },
+            { text: "Just found out my favorite local bookstore is closing down. This is heartbreaking 💔📚", user: { name: "Thomas Baker", screen_name: "book_tom" }, emotion: "negative", emoji: "💔", state: "MA", city: "Boston" },
+            { text: "Another rejection email. Job hunting is so demoralizing. When will something work out? 😔", user: { name: "Lisa Chang", screen_name: "jobseeker_lisa" }, emotion: "negative", emoji: "😔", state: "TX", city: "Austin" },
+            { text: "The wifi has been down all morning and I have deadlines to meet. This is so frustrating! 💻😠", user: { name: "Kevin Moore", screen_name: "frustrated_kev" }, emotion: "negative", emoji: "😠", state: "WA", city: "Bellevue" },
+            { text: "Spilled coffee all over my laptop right before the big presentation. Today is not my day ☕💻😩", user: { name: "Nicole Johnson", screen_name: "unlucky_nicole" }, emotion: "negative", emoji: "😩", state: "IL", city: "Chicago" },
+            
+            // Neutral tweets
+            { text: "Just finished my morning jog. Ready to start the day with some productivity 🏃‍♂️", user: { name: "Chris Davis", screen_name: "morning_chris" }, emotion: "neutral", emoji: "🏃‍♂️", state: "CO", city: "Boulder" },
+            { text: "Making pasta for dinner tonight. Simple but satisfying 🍝", user: { name: "Maria Gonzalez", screen_name: "chef_maria" }, emotion: "neutral", emoji: "🍝", state: "AZ", city: "Phoenix" },
+            { text: "Reading a new book about space exploration. Learning something new every day 📖🚀", user: { name: "Sam Wilson", screen_name: "curious_sam" }, emotion: "neutral", emoji: "📖", state: "NC", city: "Raleigh" },
+            { text: "Taking the dog for a walk in the park. Fresh air and exercise ☀️🐕", user: { name: "Rachel Green", screen_name: "dog_mom_rach" }, emotion: "neutral", emoji: "🐕", state: "GA", city: "Atlanta" },
+            { text: "Working on a new coding project this weekend. Time to learn some new frameworks 💻", user: { name: "Jordan Kim", screen_name: "coder_jordan" }, emotion: "neutral", emoji: "💻", state: "WA", city: "Seattle" },
+            { text: "Organizing my closet today. Spring cleaning is oddly therapeutic 🧹👕", user: { name: "Taylor Smith", screen_name: "organized_taylor" }, emotion: "neutral", emoji: "🧹", state: "OH", city: "Columbus" },
+            { text: "Trying a new recipe for banana bread. Experimenting in the kitchen 🍌🍞", user: { name: "Morgan Brown", screen_name: "baker_morgan" }, emotion: "neutral", emoji: "🍞", state: "OR", city: "Eugene" }
+        ];
 
-		<section class="tweet">
-			<blockquote class="h-entry">
-				<a class="button" role="button" title="Follow on Twitter" href="" target="_blank"><img src="images/twitter-button.png"></a>
-				<div class="header">
-					<div class="name"></div>
-					<div class="screenname"></div>
-				</div>
-				
-				<div class="text"></div>
-				<div class="timestamp"></div>
+        // US States simplified coordinates for better map display
+        const statesData = {
+            "type": "FeatureCollection",
+            "features": [
+                {"type": "Feature", "properties": {"STATE_ABBR": "CA"}, "geometry": {"type": "Polygon", "coordinates": [[[-124.3, 42], [-124.3, 32.5], [-114.1, 32.5], [-114.1, 42], [-124.3, 42]]]}},
+                {"type": "Feature", "properties": {"STATE_ABBR": "NY"}, "geometry": {"type": "Polygon", "coordinates": [[[-79.8, 45], [-79.8, 40.5], [-71.8, 40.5], [-71.8, 45], [-79.8, 45]]]}},
+                {"type": "Feature", "properties": {"STATE_ABBR": "TX"}, "geometry": {"type": "Polygon", "coordinates": [[[-106.6, 36.5], [-106.6, 25.8], [-93.5, 25.8], [-93.5, 36.5], [-106.6, 36.5]]]}},
+                {"type": "Feature", "properties": {"STATE_ABBR": "FL"}, "geometry": {"type": "Polygon", "coordinates": [[[-87.6, 31], [-87.6, 24.5], [-80.0, 24.5], [-80.0, 31], [-87.6, 31]]]}},
+                {"type": "Feature", "properties": {"STATE_ABBR": "WA"}, "geometry": {"type": "Polygon", "coordinates": [[[-124.8, 49], [-124.8, 45.5], [-116.9, 45.5], [-116.9, 49], [-124.8, 49]]]}},
+                {"type": "Feature", "properties": {"STATE_ABBR": "IL"}, "geometry": {"type": "Polygon", "coordinates": [[[-91.5, 42.5], [-91.5, 36.9], [-87.0, 36.9], [-87.0, 42.5], [-91.5, 42.5]]]}},
+                {"type": "Feature", "properties": {"STATE_ABBR": "CO"}, "geometry": {"type": "Polygon", "coordinates": [[[-109.1, 41], [-109.1, 37], [-102.0, 37], [-102.0, 41], [-109.1, 41]]]}},
+                {"type": "Feature", "properties": {"STATE_ABBR": "OR"}, "geometry": {"type": "Polygon", "coordinates": [[[-124.6, 46.2], [-124.6, 42], [-116.5, 42], [-116.5, 46.2], [-124.6, 46.2]]]}},
+                {"type": "Feature", "properties": {"STATE_ABBR": "MA"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.5, 42.9], [-73.5, 41.2], [-69.9, 41.2], [-69.9, 42.9], [-73.5, 42.9]]]}},
+                {"type": "Feature", "properties": {"STATE_ABBR": "AZ"}, "geometry": {"type": "Polygon", "coordinates": [[[-114.8, 37], [-114.8, 31.3], [-109.0, 31.3], [-109.0, 37], [-114.8, 37]]]}},
+                {"type": "Feature", "properties": {"STATE_ABBR": "NC"}, "geometry": {"type": "Polygon", "coordinates": [[[-84.3, 36.6], [-84.3, 33.8], [-75.4, 33.8], [-75.4, 36.6], [-84.3, 36.6]]]}},
+                {"type": "Feature", "properties": {"STATE_ABBR": "GA"}, "geometry": {"type": "Polygon", "coordinates": [[[-85.6, 35], [-85.6, 30.4], [-80.8, 30.4], [-80.8, 35], [-85.6, 35]]]}},
+                {"type": "Feature", "properties": {"STATE_ABBR": "OH"}, "geometry": {"type": "Polygon", "coordinates": [[[-84.8, 42], [-84.8, 38.4], [-80.5, 38.4], [-80.5, 42], [-84.8, 42]]]}}
+            ]
+        };
 
-				<div class="actions">
-					<a class="reply" href="" target="_blank"><i class="fa fa-reply"></i></a>
-					<a class="retweet" href="" target="_blank"><i class="fa fa-retweet"></i></a>
-					<a class="favorite" href="" target="_blank"><i class="fa fa-star"></i></a>
-				</div>
-			</blockquote>
-			<div class="emotion"></div>
-		</section>
+        // Stream state management
+        let stateTally = {};
+        let isRunning = true;
+        let tweetCount = 0;
+        let intervalId;
+        let totalStats = { positive: 0, negative: 0, neutral: 0 };
 
-		<section class="legendbox">
-			<ul>
-				<li><div class="happy"></div>More positive tweets</li>
-				<li><div class="neutral"></div>Equal numbers of positive and negative tweets</li>
-				<li><div class="sad"></div>More negative tweets</li>
-			</ul>
-		</section>
-	</section>
+        // D3 Map Setup
+        const width = 700;
+        const height = 450;
+        
+        const projection = d3.geo.albersUsa()
+            .scale(800)
+            .translate([width/2, height/2]);
 
-	<input type="button" id="toggle" value="Stop me!">
+        const path = d3.geo.path()
+            .projection(projection);
 
-	<script src="//cdn.pubnub.com/pubnub.min.js"></script>
-	<script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>	
-	<script src="//cdnjs.cloudflare.com/ajax/libs/topojson/1.1.0/topojson.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/twemoji.min.js"></script>
-	<script src="js/app.js"></script>
+        const svg = d3.select('#map').append('svg')
+            .attr('width', width)
+            .attr('height', height);
 
+        // Draw states
+        svg.selectAll('path')
+            .data(statesData.features)
+            .enter()
+            .append('path')
+            .attr('class', d => 'states ' + d.properties.STATE_ABBR)
+            .attr('d', path)
+            .attr('fill', '#e1e8ed')
+            .on('mouseover', function(d) {
+                const state = d.properties.STATE_ABBR;
+                const tally = stateTally[state];
+                if (tally) {
+                    // Could show tooltip with state stats
+                }
+            });
 
-	
+        // Realistic tweet streaming function
+        function getRandomTweet() {
+            return mockTweetsDatabase[Math.floor(Math.random() * mockTweetsDatabase.length)];
+        }
+
+        function getRandomInterval() {
+            // Random interval between 1-5 seconds for realistic streaming
+            return Math.random() * 4000 + 1000;
+        }
+
+        function displayTweet(tweet) {
+            tweetCount++;
+            totalStats[tweet.emotion]++;
+            
+            const tweetElement = document.getElementById('current-tweet');
+            
+            // Add animation class
+            tweetElement.classList.remove('active');
+            
+            setTimeout(() => {
+                // Update tweet content
+                document.getElementById('avatar').textContent = tweet.user.name.charAt(0).toUpperCase();
+                document.getElementById('name').textContent = tweet.user.name;
+                document.getElementById('screenname').textContent = '@' + tweet.user.screen_name;
+                document.getElementById('location').textContent = `📍 ${tweet.city}, ${tweet.state}`;
+                document.getElementById('text').innerHTML = twemoji.parse(tweet.text);
+                document.getElementById('timestamp').textContent = new Date().toLocaleTimeString();
+                document.getElementById('tweet-count').textContent = `Tweet #${tweetCount}`;
+                
+                // Update emotion
+                const emotionEl = document.getElementById('emotion');
+                emotionEl.textContent = tweet.emoji;
+                
+                // Update tweet styling based on emotion
+                tweetElement.className = `tweet active ${tweet.emotion}`;
+                
+                // Update statistics
+                updateStatistics();
+                
+                // Update state tally and color
+                updateStateTally(tweet.state, tweet.emotion);
+                
+                // Add tweet indicator on map
+                addTweetIndicator(tweet);
+                
+            }, 100);
+        }
+
+        function updateStatistics() {
+            document.getElementById('total-count').textContent = tweetCount;
+            document.getElementById('positive-count').textContent = totalStats.positive;
+            document.getElementById('negative-count').textContent = totalStats.negative;
+            document.getElementById('neutral-count').textContent = totalStats.neutral;
+        }
+
+        function updateStateTally(state, emotion) {
+            if (!stateTally[state]) {
+                stateTally[state] = { positive: 0, negative: 0, neutral: 0 };
+            }
+            stateTally[state][emotion]++;
+            updateStateColor(state);
+        }
+
+        function updateStateColor(state) {
+            const tally = stateTally[state];
+            const stateEl = d3.select('.' + state);
+            
+            let color = '#DECEB3'; // neutral
+            const total = tally.positive + tally.negative + tally.neutral;
+            
+            if (total > 0) {
+                const positiveRatio = tally.positive / total;
+                const negativeRatio = tally.negative / total;
+                
+                if (positiveRatio > negativeRatio + 0.1) {
+                    color = '#FF8586'; // positive
+                } else if (negativeRatio > positiveRatio + 0.1) {
+                    color = '#63A69F'; // negative
+                }
+            }
+            
+            stateEl.transition()
+                .duration(800)
+                .attr('fill', color);
+        }
+
+        function addTweetIndicator(tweet) {
+            // More accurate state center positions
+            const stateCenters = {
+                'CA': [180, 280], 'NY': [500, 160], 'TX': [320, 320], 'FL': [480, 340],
+                'WA': [140, 120], 'IL': [380, 200], 'CO': [290, 240], 'OR': [130, 160],
+                'MA': [520, 140], 'AZ': [230, 300], 'NC': [460, 240], 'GA': [450, 280],
+                'OH': [420, 180]
+            };
+            
+            const pos = stateCenters[tweet.state] || [350, 225];
+            
+            // Add some randomness to position for multiple tweets in same state
+            const offsetX = (Math.random() - 0.5) * 30;
+            const offsetY = (Math.random() - 0.5) * 30;
+            
+            const emotionColors = {
+                'positive': '#FF8586',
+                'negative': '#63A69F', 
+                'neutral': '#DECEB3'
+            };
+            
+            svg.append('circle')
+                .attr('class', 'tweet-indicator')
+                .attr('cx', pos[0] + offsetX)
+                .attr('cy', pos[1] + offsetY)
+                .attr('r', 0)
+                .attr('fill', emotionColors[tweet.emotion])
+                .transition()
+                .duration(400)
+                .attr('r', 6)
+                .transition()
+                .delay(2500)
+                .duration(600)
+                .attr('r', 0)
+                .attr('opacity', 0)
+                .remove();
+        }
+
+        function scheduleNextTweet() {
+            if (isRunning) {
+                const tweet = getRandomTweet();
+                displayTweet(tweet);
+                
+                setTimeout(scheduleNextTweet, getRandomInterval());
+            }
+        }
+
+        function startStream() {
+            scheduleNextTweet();
+        }
+
+        function updateStreamStatus() {
+            const statusIndicator = document.getElementById('status-indicator');
+            const statusText = document.getElementById('status-text');
+            
+            if (isRunning) {
+                statusIndicator.classList.remove('stopped');
+                statusText.textContent = 'Live streaming';
+            } else {
+                statusIndicator.classList.add('stopped');
+                statusText.textContent = 'Stream paused';
+            }
+        }
+
+        // Toggle button functionality
+        document.getElementById('toggle').addEventListener('click', function() {
+            isRunning = !isRunning;
+            const btn = this;
+            
+            if (isRunning) {
+                btn.innerHTML = '⏸️ Pause Stream';
+                btn.classList.remove('stopped');
+                scheduleNextTweet(); // Resume streaming
+            } else {
+                btn.innerHTML = '▶️ Resume Stream';
+                btn.classList.add('stopped');
+            }
+            
+            updateStreamStatus();
+        });
+
+        // Initialize the stream
+        setTimeout(() => {
+            const firstTweet = getRandomTweet();
+            displayTweet(firstTweet);
+            setTimeout(startStream, 2000); // Start continuous stream after first tweet
+        }, 1500);
+
+        // Initialize status
+        updateStreamStatus();
+    </script>
 </body>
 </html>
