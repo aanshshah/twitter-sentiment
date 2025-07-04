@@ -443,7 +443,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/1.1.0/topojson.min.js"></script>
-    <script src="https://unpkg.com/twemoji@latest/dist/twemoji.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/twemoji.min.js"></script>
     
     <script>
         // Expanded mock tweets database for realistic streaming
@@ -477,25 +477,8 @@
             { text: "Trying a new recipe for banana bread. Experimenting in the kitchen 🍌🍞", user: { name: "Morgan Brown", screen_name: "baker_morgan" }, emotion: "neutral", emoji: "🍞", state: "OR", city: "Eugene" }
         ];
 
-        // US States simplified coordinates for better map display
-        const statesData = {
-            "type": "FeatureCollection",
-            "features": [
-                {"type": "Feature", "properties": {"STATE_ABBR": "CA"}, "geometry": {"type": "Polygon", "coordinates": [[[-124.3, 42], [-124.3, 32.5], [-114.1, 32.5], [-114.1, 42], [-124.3, 42]]]}},
-                {"type": "Feature", "properties": {"STATE_ABBR": "NY"}, "geometry": {"type": "Polygon", "coordinates": [[[-79.8, 45], [-79.8, 40.5], [-71.8, 40.5], [-71.8, 45], [-79.8, 45]]]}},
-                {"type": "Feature", "properties": {"STATE_ABBR": "TX"}, "geometry": {"type": "Polygon", "coordinates": [[[-106.6, 36.5], [-106.6, 25.8], [-93.5, 25.8], [-93.5, 36.5], [-106.6, 36.5]]]}},
-                {"type": "Feature", "properties": {"STATE_ABBR": "FL"}, "geometry": {"type": "Polygon", "coordinates": [[[-87.6, 31], [-87.6, 24.5], [-80.0, 24.5], [-80.0, 31], [-87.6, 31]]]}},
-                {"type": "Feature", "properties": {"STATE_ABBR": "WA"}, "geometry": {"type": "Polygon", "coordinates": [[[-124.8, 49], [-124.8, 45.5], [-116.9, 45.5], [-116.9, 49], [-124.8, 49]]]}},
-                {"type": "Feature", "properties": {"STATE_ABBR": "IL"}, "geometry": {"type": "Polygon", "coordinates": [[[-91.5, 42.5], [-91.5, 36.9], [-87.0, 36.9], [-87.0, 42.5], [-91.5, 42.5]]]}},
-                {"type": "Feature", "properties": {"STATE_ABBR": "CO"}, "geometry": {"type": "Polygon", "coordinates": [[[-109.1, 41], [-109.1, 37], [-102.0, 37], [-102.0, 41], [-109.1, 41]]]}},
-                {"type": "Feature", "properties": {"STATE_ABBR": "OR"}, "geometry": {"type": "Polygon", "coordinates": [[[-124.6, 46.2], [-124.6, 42], [-116.5, 42], [-116.5, 46.2], [-124.6, 46.2]]]}},
-                {"type": "Feature", "properties": {"STATE_ABBR": "MA"}, "geometry": {"type": "Polygon", "coordinates": [[[-73.5, 42.9], [-73.5, 41.2], [-69.9, 41.2], [-69.9, 42.9], [-73.5, 42.9]]]}},
-                {"type": "Feature", "properties": {"STATE_ABBR": "AZ"}, "geometry": {"type": "Polygon", "coordinates": [[[-114.8, 37], [-114.8, 31.3], [-109.0, 31.3], [-109.0, 37], [-114.8, 37]]]}},
-                {"type": "Feature", "properties": {"STATE_ABBR": "NC"}, "geometry": {"type": "Polygon", "coordinates": [[[-84.3, 36.6], [-84.3, 33.8], [-75.4, 33.8], [-75.4, 36.6], [-84.3, 36.6]]]}},
-                {"type": "Feature", "properties": {"STATE_ABBR": "GA"}, "geometry": {"type": "Polygon", "coordinates": [[[-85.6, 35], [-85.6, 30.4], [-80.8, 30.4], [-80.8, 35], [-85.6, 35]]]}},
-                {"type": "Feature", "properties": {"STATE_ABBR": "OH"}, "geometry": {"type": "Polygon", "coordinates": [[[-84.8, 42], [-84.8, 38.4], [-80.5, 38.4], [-80.5, 42], [-84.8, 42]]]}}
-            ]
-        };
+        // Load US states data and initialize map
+        let statesLoaded = false;
 
         // Stream state management
         let stateTally = {};
@@ -519,21 +502,171 @@
             .attr('width', width)
             .attr('height', height);
 
-        // Draw states
-        svg.selectAll('path')
-            .data(statesData.features)
-            .enter()
-            .append('path')
-            .attr('class', d => 'states ' + d.properties.STATE_ABBR)
-            .attr('d', path)
-            .attr('fill', '#e1e8ed')
-            .on('mouseover', function(d) {
-                const state = d.properties.STATE_ABBR;
-                const tally = stateTally[state];
-                if (tally) {
-                    // Could show tooltip with state stats
+        // Add loading indicator for map
+        const mapLoading = svg.append('text')
+            .attr('x', width/2)
+            .attr('y', height/2)
+            .attr('text-anchor', 'middle')
+            .attr('fill', '#657786')
+            .attr('font-size', '18px')
+            .text('Loading US map...');
+
+        // State center positions for built-in map (adjusted for cleaner US map with scale)
+        const stateCenters = {
+            'CA': [74, 232], 'NY': [516, 120], 'TX': [192, 324], 'FL': [420, 432],
+            'WA': [72, 84], 'IL': [350, 180], 'CO': [216, 186], 'OR': [72, 132],
+            'MA': [552, 132], 'AZ': [96, 228], 'NC': [492, 300], 'GA': [408, 360],
+            'OH': [432, 168], 'PA': [468, 180], 'MI': [384, 144], 'NJ': [522, 220],
+            'VA': [468, 276], 'IN': [384, 192], 'TN': [396, 300], 'MO': [324, 222],
+            'MD': [498, 258], 'WI': [342, 144], 'MN': [318, 108], 'SC': [456, 342],
+            'AL': [384, 360], 'LA': [324, 378], 'KY': [408, 264], 'OK': [252, 270],
+            'CT': [528, 200], 'UT': [132, 200], 'IA': [324, 180], 'NV': [108, 204],
+            'AR': [324, 300], 'MS': [348, 360], 'KS': [264, 228], 'NM': [156, 288],
+            'NE': [264, 180], 'WV': [444, 264], 'ID': [108, 120], 'MT': [192, 108],
+            'DE': [522, 258], 'SD': [282, 150], 'ND': [282, 108], 'WY': [216, 150],
+            'VT': [528, 168], 'NH': [540, 168], 'ME': [564, 168], 'RI': [540, 200]
+        };
+
+        // Safe twemoji parsing with fallback
+        function safeTwemojiParse(text) {
+            try {
+                if (typeof twemoji !== 'undefined' && twemoji.parse) {
+                    return twemoji.parse(text);
                 }
-            });
+            } catch (e) {
+                console.log('Twemoji parsing failed, using original text');
+            }
+            return text; // Return original text if twemoji fails
+        }
+
+        // Built-in US map with recognizable state shapes
+        function drawBuiltInMap() {
+            mapLoading.remove(); // Remove loading text
+            
+            // Create a cleaner, simplified US map with key states
+            const mapGroup = svg.append('g')
+                .attr('transform', 'translate(30, 40) scale(1.2)');
+            
+            // Simplified but geographically accurate state shapes
+            const states = [
+                // West Coast
+                {name: 'WA', path: 'M 20 20 L 20 50 L 35 55 L 55 50 L 60 40 L 55 30 L 45 20 Z'},
+                {name: 'OR', path: 'M 20 55 L 20 80 L 35 85 L 55 80 L 60 70 L 60 60 L 55 55 L 35 55 Z'},
+                {name: 'CA', path: 'M 20 85 L 15 100 L 10 130 L 15 170 L 25 190 L 35 195 L 45 190 L 50 170 L 55 130 L 50 100 L 45 85 L 35 85 Z'},
+                
+                // Mountain/Southwest
+                {name: 'NV', path: 'M 55 95 L 55 145 L 85 145 L 90 135 L 90 105 L 85 95 Z'},
+                {name: 'ID', path: 'M 60 30 L 60 70 L 90 70 L 95 60 L 95 40 L 90 30 Z'},
+                {name: 'MT', path: 'M 95 20 L 95 60 L 175 60 L 175 20 Z'},
+                {name: 'WY', path: 'M 95 75 L 95 115 L 160 115 L 160 75 Z'},
+                {name: 'UT', path: 'M 90 95 L 90 145 L 120 145 L 120 95 Z'},
+                {name: 'CO', path: 'M 120 115 L 120 155 L 180 155 L 180 115 Z'},
+                {name: 'AZ', path: 'M 55 170 L 55 200 L 65 210 L 95 210 L 105 200 L 105 170 L 95 160 L 65 160 Z'},
+                {name: 'NM', path: 'M 105 170 L 105 210 L 145 210 L 145 170 Z'},
+                
+                // Great Plains
+                {name: 'ND', path: 'M 175 20 L 175 60 L 235 60 L 235 20 Z'},
+                {name: 'SD', path: 'M 175 60 L 175 90 L 235 90 L 235 60 Z'},
+                {name: 'NE', path: 'M 160 115 L 160 145 L 220 145 L 220 115 Z'},
+                {name: 'KS', path: 'M 180 155 L 180 185 L 240 185 L 240 155 Z'},
+                {name: 'OK', path: 'M 145 185 L 145 215 L 205 215 L 210 205 L 205 195 L 205 185 Z'},
+                {name: 'TX', path: 'M 105 210 L 100 220 L 95 240 L 100 270 L 110 290 L 130 300 L 160 300 L 190 290 L 210 270 L 220 250 L 220 230 L 210 210 L 190 200 L 160 200 L 130 200 Z'},
+                
+                // Midwest
+                {name: 'MN', path: 'M 235 20 L 235 70 L 275 70 L 280 60 L 280 30 L 275 20 Z'},
+                {name: 'IA', path: 'M 220 90 L 220 130 L 260 130 L 265 120 L 265 100 L 260 90 Z'},
+                {name: 'MO', path: 'M 205 155 L 205 195 L 245 195 L 250 185 L 250 165 L 245 155 Z'},
+                {name: 'AR', path: 'M 210 200 L 205 210 L 205 230 L 210 240 L 240 240 L 245 230 L 245 210 L 240 200 Z'},
+                {name: 'LA', path: 'M 210 250 L 205 260 L 210 280 L 220 290 L 240 290 L 250 280 L 250 260 L 245 250 Z'},
+                {name: 'WI', path: 'M 260 40 L 255 50 L 255 90 L 260 100 L 285 100 L 290 90 L 290 50 L 285 40 Z'},
+                {name: 'IL', path: 'M 265 100 L 260 110 L 260 150 L 265 160 L 280 165 L 290 160 L 295 150 L 295 110 L 290 100 Z'},
+                {name: 'IN', path: 'M 295 100 L 295 150 L 305 160 L 315 160 L 325 150 L 325 110 L 320 100 Z'},
+                {name: 'MI', path: 'M 290 40 L 290 90 L 300 100 L 325 100 L 330 90 L 330 50 L 325 40 Z'},
+                {name: 'OH', path: 'M 325 100 L 325 140 L 335 150 L 355 150 L 365 140 L 365 110 L 360 100 Z'},
+                {name: 'KY', path: 'M 295 160 L 290 170 L 290 190 L 295 200 L 355 200 L 360 190 L 360 170 L 355 160 Z'},
+                {name: 'TN', path: 'M 250 200 L 245 210 L 245 230 L 250 240 L 355 240 L 360 230 L 360 210 L 355 200 Z'},
+                {name: 'MS', path: 'M 250 240 L 250 280 L 260 290 L 270 290 L 280 280 L 280 250 L 275 240 Z'},
+                {name: 'AL', path: 'M 280 240 L 280 280 L 290 290 L 300 290 L 310 280 L 310 250 L 305 240 Z'},
+                
+                // Southeast
+                {name: 'GA', path: 'M 310 240 L 310 280 L 320 290 L 330 290 L 340 280 L 340 250 L 335 240 Z'},
+                {name: 'FL', path: 'M 320 290 L 315 310 L 320 330 L 330 350 L 340 360 L 350 355 L 355 340 L 360 320 L 355 300 L 350 290 L 340 285 L 330 285 Z'},
+                {name: 'SC', path: 'M 340 240 L 340 260 L 350 270 L 370 270 L 380 260 L 380 250 L 375 240 Z'},
+                {name: 'NC', path: 'M 360 210 L 355 220 L 355 240 L 360 250 L 400 250 L 410 240 L 415 230 L 410 220 L 400 210 Z'},
+                {name: 'VA', path: 'M 375 170 L 370 180 L 370 210 L 375 220 L 405 220 L 415 210 L 420 200 L 415 190 L 410 180 L 405 170 Z'},
+                {name: 'WV', path: 'M 355 150 L 350 160 L 350 190 L 355 200 L 375 200 L 380 190 L 380 160 L 375 150 Z'},
+                
+                // Northeast  
+                {name: 'PA', path: 'M 365 110 L 365 150 L 375 160 L 405 160 L 415 150 L 415 120 L 410 110 Z'},
+                {name: 'NY', path: 'M 400 80 L 395 90 L 395 110 L 400 120 L 410 125 L 430 120 L 435 110 L 435 90 L 430 80 L 410 75 Z'},
+                {name: 'VT', path: 'M 435 70 L 435 90 L 445 95 L 450 90 L 450 75 L 445 70 Z'},
+                {name: 'NH', path: 'M 450 70 L 450 90 L 460 95 L 465 90 L 465 75 L 460 70 Z'},
+                {name: 'ME', path: 'M 465 60 L 465 90 L 475 100 L 485 95 L 490 85 L 485 70 L 480 60 L 470 60 Z'},
+                {name: 'MA', path: 'M 445 95 L 445 110 L 455 115 L 470 110 L 475 105 L 470 95 L 455 90 Z'},
+                {name: 'CT', path: 'M 435 105 L 435 120 L 450 120 L 450 105 Z'},
+                {name: 'RI', path: 'M 450 105 L 450 120 L 460 120 L 460 105 Z'},
+                {name: 'NJ', path: 'M 420 125 L 420 155 L 430 165 L 435 155 L 435 135 L 430 125 Z'},
+                {name: 'MD', path: 'M 405 155 L 405 175 L 425 175 L 430 170 L 430 160 L 425 155 Z'},
+                {name: 'DE', path: 'M 425 155 L 425 175 L 435 175 L 435 155 Z'}
+            ];
+            
+            // Draw all states
+            mapGroup.selectAll('path.state')
+                .data(states)
+                .enter()
+                .append('path')
+                .attr('class', d => 'states ' + d.name)
+                .attr('d', d => d.path)
+                .attr('fill', '#e1e8ed')
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 0.8)
+                .on('mouseover', function(d) {
+                    d3.select(this).attr('stroke-width', 2).attr('stroke', '#1da1f2');
+                })
+                .on('mouseout', function(d) {
+                    d3.select(this).attr('stroke-width', 0.8).attr('stroke', '#fff');
+                });
+                
+            statesLoaded = true;
+            
+            // Start the stream once map is loaded
+            initializeStream();
+        }
+
+        // Load and draw US states - with immediate fallback
+        d3.json('https://cdn.jsdelivr.net/npm/us-atlas@1/states-10m.json', function(error, us) {
+            if (error || !us) {
+                console.log('Error loading US states data, using built-in map');
+                drawBuiltInMap();
+                return;
+            }
+            
+            mapLoading.remove(); // Remove loading text
+            statesLoaded = true;
+            
+            svg.selectAll('path')
+                .data(topojson.feature(us, us.objects.states).features)
+                .enter()
+                .append('path')
+                .attr('class', d => 'states state-' + d.id)
+                .attr('d', path)
+                .attr('fill', '#e1e8ed')
+                .on('mouseover', function(d) {
+                    // Could show tooltip with state stats
+                });
+                
+            // Start the stream once map is loaded
+            initializeStream();
+        });
+        
+        // Initialize the streaming once map is ready
+        function initializeStream() {
+            setTimeout(() => {
+                const firstTweet = getRandomTweet();
+                displayTweet(firstTweet);
+                setTimeout(startStream, 2000); // Start continuous stream after first tweet
+            }, 500);
+        }
 
         // Realistic tweet streaming function
         function getRandomTweet() {
@@ -560,7 +693,7 @@
                 document.getElementById('name').textContent = tweet.user.name;
                 document.getElementById('screenname').textContent = '@' + tweet.user.screen_name;
                 document.getElementById('location').textContent = `📍 ${tweet.city}, ${tweet.state}`;
-                document.getElementById('text').innerHTML = twemoji.parse(tweet.text);
+                document.getElementById('text').innerHTML = safeTwemojiParse(tweet.text);
                 document.getElementById('timestamp').textContent = new Date().toLocaleTimeString();
                 document.getElementById('tweet-count').textContent = `Tweet #${tweetCount}`;
                 
@@ -602,6 +735,8 @@
             const tally = stateTally[state];
             const stateEl = d3.select('.' + state);
             
+            if (stateEl.empty()) return;
+            
             let color = '#DECEB3'; // neutral
             const total = tally.positive + tally.negative + tally.neutral;
             
@@ -622,14 +757,6 @@
         }
 
         function addTweetIndicator(tweet) {
-            // More accurate state center positions
-            const stateCenters = {
-                'CA': [180, 280], 'NY': [500, 160], 'TX': [320, 320], 'FL': [480, 340],
-                'WA': [140, 120], 'IL': [380, 200], 'CO': [290, 240], 'OR': [130, 160],
-                'MA': [520, 140], 'AZ': [230, 300], 'NC': [460, 240], 'GA': [450, 280],
-                'OH': [420, 180]
-            };
-            
             const pos = stateCenters[tweet.state] || [350, 225];
             
             // Add some randomness to position for multiple tweets in same state
@@ -648,9 +775,10 @@
                 .attr('cy', pos[1] + offsetY)
                 .attr('r', 0)
                 .attr('fill', emotionColors[tweet.emotion])
+                .attr('opacity', 0.9)
                 .transition()
                 .duration(400)
-                .attr('r', 6)
+                .attr('r', 8)
                 .transition()
                 .delay(2500)
                 .duration(600)
@@ -702,15 +830,16 @@
             updateStreamStatus();
         });
 
-        // Initialize the stream
-        setTimeout(() => {
-            const firstTweet = getRandomTweet();
-            displayTweet(firstTweet);
-            setTimeout(startStream, 2000); // Start continuous stream after first tweet
-        }, 1500);
-
         // Initialize status
         updateStreamStatus();
+
+        // If map still hasn't loaded after 3 seconds, force the built-in map
+        setTimeout(() => {
+            if (!statesLoaded) {
+                console.log('Map loading timeout, using built-in map');
+                drawBuiltInMap();
+            }
+        }, 3000);
     </script>
 </body>
 </html>
